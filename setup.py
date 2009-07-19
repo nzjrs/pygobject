@@ -193,7 +193,7 @@ if not have_pkgconfig():
 
 if glib.can_build():
     ext_modules.append(glib)
-    py_modules.append('glib.option')
+    py_modules += ['glib.__init__', 'glib.option']
 else:
     print
     print 'ERROR: Nothing to do, glib could not be found and is essential.'
@@ -205,6 +205,7 @@ if gobject.can_build():
     data_files.append((HTML_DIR, glob.glob('docs/html/*.html')))
     data_files.append((HTML_DIR, ['docs/style.css']))
     data_files.append((XSL_DIR,  glob.glob('docs/xsl/*.xsl')))
+    py_modules += ['gobject.__init__', 'gobject.propertyhelper']
 else:
     print
     print 'ERROR: Nothing to do, gobject could not be found and is essential.'
@@ -212,6 +213,7 @@ else:
 
 if gio.can_build():
     ext_modules.append(gio)
+    py_modules += ['gio.__init__']
 else:
     print
     print 'ERROR: Nothing to do, gio could not be found and is essential.'
