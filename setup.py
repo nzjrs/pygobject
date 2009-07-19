@@ -125,8 +125,8 @@ glib = PkgConfigExtension(name='glib._glib',
                           pkc_version=GLIB_REQUIRED,
                           pygobject_pkc=None,
                           include_dirs=['glib'],
-                          library_dirs=['build\lib.win32-2.5/glib'],
-                          libraries=['pyglib'],
+#                          library_dirs=['build\lib.win32-2.5/glib'],
+#                          libraries=['pyglib'],
                           sources=['glib/glibmodule.c',
                                    'glib/pygiochannel.c',
                                    'glib/pygmaincontext.c',
@@ -135,6 +135,7 @@ glib = PkgConfigExtension(name='glib._glib',
                                    'glib/pygoptiongroup.c',
                                    'glib/pygsource.c',
                                    'glib/pygspawn.c',
+                                   'glib/pyglib.c'
                                    ])
 
 # GObject
@@ -143,8 +144,8 @@ gobject = PkgConfigExtension(name='gobject._gobject',
                              pkc_version=GLIB_REQUIRED,
                              pygobject_pkc=None,
                              include_dirs=['glib'],
-                             library_dirs=['build\lib.win32-2.5/glib'],
-                             libraries=['pyglib'],
+#                             library_dirs=['build\lib.win32-2.5/glib'],
+#                             libraries=['pyglib'],
                              sources=['gobject/gobjectmodule.c',
                                       'gobject/pygboxed.c',
                                       'gobject/pygenum.c',
@@ -154,6 +155,7 @@ gobject = PkgConfigExtension(name='gobject._gobject',
                                       'gobject/pygparamspec.c',
                                       'gobject/pygpointer.c',
                                       'gobject/pygtype.c',
+                                      'glib/pyglib.c'
                                       ])
 
 # gio
@@ -163,11 +165,12 @@ gio = TemplateExtension(name='gio',
                         output='gio._gio',
                         defs='gio/gio.defs',
                         include_dirs=['glib'],
-                             library_dirs=['build\lib.win32-2.5/glib'],
-                             libraries=['pyglib'],
+#                             library_dirs=['build\lib.win32-2.5/glib'],
+#                             libraries=['pyglib'],
                         sources=['gio/giomodule.c',
                                  'gio/gio.c',
-                                 'gio/pygio-utils.c'],
+                                 'gio/pygio-utils.c',
+                                 'glib/pyglib.c'],
                         register=['gio/gio.defs'],
                         override='gio/gio.override')
 
@@ -180,13 +183,13 @@ if not have_pkgconfig():
     print "Error, could not find pkg-config"
     raise SystemExit
 
-if pyglib.can_build():
-    ext_modules.append(pyglib)
-    data_files.append((INCLUDE_DIR, ('glib/pyglib.h',)))
-else:
-    print
-    print 'ERROR: Nothing to do, glib could not be found and is essential.'
-    raise SystemExit
+#if pyglib.can_build():
+#    ext_modules.append(pyglib)
+#    data_files.append((INCLUDE_DIR, ('glib/pyglib.h',)))
+#else:
+#    print
+#    print 'ERROR: Nothing to do, glib could not be found and is essential.'
+#    raise SystemExit
 
 if glib.can_build():
     ext_modules.append(glib)
