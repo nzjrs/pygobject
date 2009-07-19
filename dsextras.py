@@ -145,6 +145,14 @@ class BuildExt(build_ext):
         if save_libs != None and save_libs != ext.libraries:
             ext.libraries = save_libs
 
+    def get_export_symbols (self, ext):
+        # if --export-all-symbols is explicitely passed
+        # in the extra_link_args, prevent build_ext
+        # from automatically creating a def file
+        if '--export-all-symbols' in ext.extra_link_args:
+            pass
+        build_ext.get_export_symbols (self, ext)
+
 class InstallLib(install_lib):
 
     local_outputs = []
@@ -220,10 +228,19 @@ class PkgConfigExtension(Extension):
     can_build_ok = None
     def __init__(self, **kwargs):
         name = kwargs['pkc_name']
-        kwargs['include_dirs'] = self.get_include_dirs(name) + GLOBAL_INC
+        if 'include_dirs' in kwargs:
+            kwargs['include_dirs'] += self.get_include_dirs(name) + GLOBAL_INC
+        else:
+            kwargs['include_dirs'] = self.get_include_dirs(name) + GLOBAL_INC
         kwargs['define_macros'] = GLOBAL_MACROS
-        kwargs['libraries'] = self.get_libraries(name)
-        kwargs['library_dirs'] = self.get_library_dirs(name)
+        if 'libraries' in kwargs:
+            kwargs['libraries'] += self.get_libraries(name)
+        else:
+            kwargs['libraries'] = self.get_libraries(name)
+        if 'library_dirs' in kwargs:
+            kwargs['library_dirs'] += self.get_library_dirs(name)
+        else:
+            kwargs['library_dirs'] = self.get_library_dirs(name)
         if 'pygobject_pkc' in kwargs:
             self.pygobject_pkc = kwargs.pop('pygobject_pkc')
         if self.pygobject_pkc:
