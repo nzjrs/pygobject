@@ -57,6 +57,7 @@ if sys.platform == 'win32':
 else:
     GLOBAL_MACROS.append(('VERSION', '"%s"' % VERSION))
 
+DEFS_DIR    = os.path.join('share', 'pygobject', PYGOBJECT_SUFFIX, 'defs')
 INCLUDE_DIR = os.path.join('include', 'pygtk-%s' % PYGOBJECT_SUFFIX)
 XSL_DIR = os.path.join('share', 'pygobject','xsl')
 HTML_DIR = os.path.join('share', 'gtk-doc', 'html', 'pygobject')
@@ -106,6 +107,7 @@ class PyGObjectInstallData(InstallData):
     def run(self):
         self.add_template_option('VERSION', VERSION)
         self.add_template_option('FFI_LIBS', '')
+        self.add_template_option('LIBFFI_PC', '')
         self.prepare()
 
         # Install templates
@@ -177,8 +179,11 @@ gio = TemplateExtension(name='gio',
 clibs = []
 data_files = []
 ext_modules = []
-py_modules = []
-py_modules.append('dsextras')
+
+#Install dsextras and codegen so that the pygtk installer
+#can find them
+py_modules = ['dsextras']
+packages = ['codegen']
 
 if not have_pkgconfig():
     print "Error, could not find pkg-config"
@@ -222,6 +227,7 @@ else:
 if gio.can_build():
     ext_modules.append(gio)
     py_modules += ['gio.__init__']
+    data_files.append((DEFS_DIR,('gio/gio-types.defs',)))
 else:
     print
     print 'ERROR: Nothing to do, gio could not be found and is essential.'
@@ -275,6 +281,7 @@ setup(name="pygobject",
       description = doclines[0],
       long_description = "\n".join(doclines[2:]),
       py_modules=py_modules,
+      packages=packages,
       ext_modules=ext_modules,
       libraries=clibs,
       data_files=data_files,
