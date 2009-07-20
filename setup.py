@@ -5,6 +5,8 @@
 """Python Bindings for GObject."""
 
 from distutils.command.build import build
+from distutils.command.build_clib import build_clib
+from distutils.sysconfig import get_python_inc
 from distutils.core import setup
 import glob
 import os
@@ -12,7 +14,8 @@ import sys
 
 from dsextras import get_m4_define, getoutput, have_pkgconfig, \
      GLOBAL_INC, GLOBAL_MACROS, InstallLib, InstallData, BuildExt, \
-     PkgConfigExtension, TemplateExtension
+     PkgConfigExtension, TemplateExtension, \
+     pkgc_get_libraries, pkgc_get_library_dirs, pkgc_get_include_dirs
 
 if '--yes-i-know-its-not-supported' in sys.argv:
     sys.argv.remove('--yes-i-know-its-not-supported')
@@ -64,6 +67,7 @@ class PyGObjectInstallLib(InstallLib):
         # Install pygtk.pth, pygtk.py[c] and templates
         self.install_pth()
         self.install_pygtk()
+        self.install_pygobject_constants()
 
         # Modify the base installation dir
         install_dir = os.path.join(self.install_dir, PYGOBJECT_SUFFIX_LONG)
@@ -86,6 +90,17 @@ class PyGObjectInstallLib(InstallLib):
         self.byte_compile([pygtk])
         self.local_outputs.append(pygtk)
         self.local_inputs.append('pygtk.py')
+
+    def install_pygobject_constants(self):
+        """generates and installs constants.py"""
+        go_dir = os.path.join(self.install_dir, PYGOBJECT_SUFFIX_LONG, "gobject")
+        self.mkpath(go_dir)
+        
+        #copy contents of constants.in to gobject/constants.py
+        constants_in = open(os.path.join("gobject","constants.py.in"), 'r').read()
+        constants = open(os.path.join(go_dir, "constants.py"), 'w')
+        constants.write(constants_in)
+        constants.close()
 
 class PyGObjectInstallData(InstallData):
     def run(self):
@@ -110,23 +125,13 @@ class PyGObjectBuild(build):
 PyGObjectBuild.user_options.append(('enable-threading', None,
                                 'enable threading support'))
 
-# pyglib shared library
-pyglib = PkgConfigExtension(name='glib.pyglib',
-                          pkc_name='glib-2.0',
-                          pkc_version=GLIB_REQUIRED,
-                          pygobject_pkc=None,
-                          include_dirs=['glib'],
-                          extra_link_args=['--export-all-symbols'],
-                          sources=['glib/pyglib.c'])
-
 # glib
 glib = PkgConfigExtension(name='glib._glib',
                           pkc_name='glib-2.0',
                           pkc_version=GLIB_REQUIRED,
                           pygobject_pkc=None,
                           include_dirs=['glib'],
-#                          library_dirs=['build\lib.win32-2.5/glib'],
-#                          libraries=['pyglib'],
+                          libraries=['pyglib'],
                           sources=['glib/glibmodule.c',
                                    'glib/pygiochannel.c',
                                    'glib/pygmaincontext.c',
@@ -135,7 +140,6 @@ glib = PkgConfigExtension(name='glib._glib',
                                    'glib/pygoptiongroup.c',
                                    'glib/pygsource.c',
                                    'glib/pygspawn.c',
-                                   'glib/pyglib.c'
                                    ])
 
 # GObject
@@ -144,8 +148,7 @@ gobject = PkgConfigExtension(name='gobject._gobject',
                              pkc_version=GLIB_REQUIRED,
                              pygobject_pkc=None,
                              include_dirs=['glib'],
-#                             library_dirs=['build\lib.win32-2.5/glib'],
-#                             libraries=['pyglib'],
+                             libraries=['pyglib'],
                              sources=['gobject/gobjectmodule.c',
                                       'gobject/pygboxed.c',
                                       'gobject/pygenum.c',
@@ -155,7 +158,6 @@ gobject = PkgConfigExtension(name='gobject._gobject',
                                       'gobject/pygparamspec.c',
                                       'gobject/pygpointer.c',
                                       'gobject/pygtype.c',
-                                      'glib/pyglib.c'
                                       ])
 
 # gio
@@ -165,15 +167,14 @@ gio = TemplateExtension(name='gio',
                         output='gio._gio',
                         defs='gio/gio.defs',
                         include_dirs=['glib'],
-#                             library_dirs=['build\lib.win32-2.5/glib'],
-#                             libraries=['pyglib'],
+                        libraries=['pyglib'],
                         sources=['gio/giomodule.c',
                                  'gio/gio.c',
-                                 'gio/pygio-utils.c',
-                                 'glib/pyglib.c'],
+                                 'gio/pygio-utils.c'],
                         register=['gio/gio.defs'],
                         override='gio/gio.override')
 
+clibs = []
 data_files = []
 ext_modules = []
 py_modules = []
@@ -183,15 +184,22 @@ if not have_pkgconfig():
     print "Error, could not find pkg-config"
     raise SystemExit
 
-#if pyglib.can_build():
-#    ext_modules.append(pyglib)
-#    data_files.append((INCLUDE_DIR, ('glib/pyglib.h',)))
-#else:
-#    print
-#    print 'ERROR: Nothing to do, glib could not be found and is essential.'
-#    raise SystemExit
-
 if glib.can_build():
+    #It would have been nice to create another class, such as PkgConfigCLib to
+    #encapsulate this dictionary, but it is impossible. build_clib.py does
+    #a dumb check to see if its only arguments are a 2-tuple containing a
+    #string and a Dictionary type - which makes it impossible to hide behind a
+    #subclass
+    #
+    #So we are stuck with this ugly thing
+    clibs.append((
+        'pyglib',{
+            'sources':['glib/pyglib.c'],
+            'include_dirs':
+                ['glib', get_python_inc()]+pkgc_get_include_dirs('glib-2.0')}))
+    #this library is not installed, so probbably should not include its header
+    #data_files.append((INCLUDE_DIR, ('glib/pyglib.h',)))
+        
     ext_modules.append(glib)
     py_modules += ['glib.__init__', 'glib.option']
 else:
@@ -268,10 +276,12 @@ setup(name="pygobject",
       long_description = "\n".join(doclines[2:]),
       py_modules=py_modules,
       ext_modules=ext_modules,
+      libraries=clibs,
       data_files=data_files,
       scripts = ["pygobject_postinstall.py"],
       options=options,
       cmdclass={'install_lib': PyGObjectInstallLib,
                 'install_data': PyGObjectInstallData,
+                'build_clib' : build_clib,
                 'build_ext': BuildExt,
                 'build': PyGObjectBuild})

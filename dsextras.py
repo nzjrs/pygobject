@@ -95,6 +95,21 @@ def pkgc_version_check(name, req_version):
         
     return 0
 
+def pkgc_get_libraries(name):
+    """returns a list of libraries as returned by pkg-config --libs-only-l"""
+    output = getoutput('pkg-config --libs-only-l %s' % name)
+    return output.replace('-l', '').split()
+
+def pkgc_get_library_dirs(name):
+    """returns a list of library dirs as returned by pkg-config --libs-only-L"""
+    output = getoutput('pkg-config --libs-only-L %s' % name)
+    return output.replace('-L', '').split()
+
+def pkgc_get_include_dirs(name):
+    """returns a list of include dirs as returned by pkg-config --cflags-only-I"""
+    output = getoutput('pkg-config --cflags-only-I %s' % name)
+    return output.replace('-I', '').split()
+
 class BuildExt(build_ext):
     def init_extra_compile_args(self):
         self.extra_compile_args = []
@@ -144,14 +159,6 @@ class BuildExt(build_ext):
         build_ext.build_extension(self, ext)
         if save_libs != None and save_libs != ext.libraries:
             ext.libraries = save_libs
-
-    def get_export_symbols (self, ext):
-        # if --export-all-symbols is explicitely passed
-        # in the extra_link_args, prevent build_ext
-        # from automatically creating a def file
-        if '--export-all-symbols' in ext.extra_link_args:
-            pass
-        build_ext.get_export_symbols (self, ext)
 
 class InstallLib(install_lib):
 
