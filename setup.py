@@ -200,6 +200,7 @@ if glib.can_build():
     clibs.append((
         'pyglib',{
             'sources':['glib/pyglib.c'],
+            'macros':GLOBAL_MACROS,
             'include_dirs':
                 ['glib', get_python_inc()]+pkgc_get_include_dirs('glib-2.0')}))
     #this library is not installed, so probbably should not include its header
