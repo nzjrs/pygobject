@@ -167,13 +167,13 @@ gio = TemplateExtension(name='gio',
                         pkc_name='gio-2.0',
                         pkc_version=GLIB_REQUIRED,
                         output='gio._gio',
-                        defs='gio/gio.defs',
+                        defs=('gio/gio.defs', ['gio/gio-types.defs']),
                         include_dirs=['glib'],
                         libraries=['pyglib'],
                         sources=['gio/giomodule.c',
                                  'gio/gio.c',
                                  'gio/pygio-utils.c'],
-                        register=['gio/gio.defs'],
+                        register=[('gio/gio.defs', ['gio/gio-types.defs'])],
                         override='gio/gio.override')
 
 clibs = []
