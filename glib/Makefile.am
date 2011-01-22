@@ -5,7 +5,8 @@ pkgincludedir = $(includedir)/pygtk-2.0/pyglib
 pkginclude_HEADERS = 		\
 	pyglib.h				\
 	pyglib-core.h			\
-	pyglib-python-compat.h
+	pyglib-python-compat.h	\
+	pygsource.h
 
 lib_LTLIBRARIES = libpyglib-2.0-@PYTHON_BASENAME@.la
 

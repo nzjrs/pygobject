@@ -6,6 +6,8 @@
 #include <pyglib-core.h>
 #include <pyglib-python-compat.h>
 
+#include <pygsource.h>
+
 #undef __PYGLIB_H_INSIDE__
 
 #endif /* PYGLIB_LIB_H */
