@@ -19,6 +19,10 @@
  * USA
  */
 
+#if !defined (__PYGLIB_H_INSIDE__) && !defined (PYGLIB_COMPILATION)
+#error "Only <pyglib/pyglib.h> can be included directly."
+#endif
+
 #ifndef __PYG_OPTIONGROUP_H__
 #define __PYG_OPTIONGROUP_H__
 
