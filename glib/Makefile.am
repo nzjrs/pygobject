@@ -39,7 +39,7 @@ _glib_la_SOURCES =			\
 	pygmaincontext.c 		\
 	pygmainloop.c	 		\
 	pygsource.c 	 		\
-	pygspawn.c				\
+	pygspawn.c			\
 	pygiochannel.h 	 		\
 	pygoptioncontext.h 		\
 	pygoptiongroup.h 		\
